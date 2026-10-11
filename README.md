@@ -63,3 +63,8 @@ Notes for production:
   queues, which is fine for single-instance deployments.
 - **Auth**: set `AUTH_ENABLED=true` and issue Bearer JWTs signed with
   `JWT_SECRET` once you want to lock the endpoint down.
+- **Production mode**: `ENVIRONMENT=production` (set automatically by the
+  Cloud Build pipeline) makes the service fail fast at boot if
+  `GOOGLE_CLOUD_PROJECT` or a real `JWT_SECRET` is missing, and warns on
+  SQLite storage, auth disabled, or non-HTTPS endpoint URLs. See
+  `.env.production.example` for the full production template.

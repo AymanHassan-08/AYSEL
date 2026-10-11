@@ -25,7 +25,7 @@ steps:
           --region=$_REGION \
           --allow-unauthenticated \
           --service-account=$_RUN_SERVICE_ACCOUNT \
-          --set-env-vars=GOOGLE_CLOUD_PROJECT=${PROJECT_ID},JWT_SECRET=${_JWT_SECRET} \
+          --set-env-vars=ENVIRONMENT=production,GOOGLE_CLOUD_PROJECT=${PROJECT_ID},JWT_SECRET=${_JWT_SECRET},AUTH_ENABLED=true \
           --cpu=1 --memory=1Gi --timeout=600s
         URL=$(gcloud run services describe aysel --region=$_REGION \
           --format 'value(status.url)')
