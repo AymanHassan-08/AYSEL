@@ -38,3 +38,28 @@ docker compose up --build
 See `docs/a2a-protocol.md` for the full list of protocol fixes applied vs. the
 original design doc (HTTP 200 JSON-RPC errors, Redis-backed event bus,
 subscribe-before-run SSE, cancel from input-required, tz-aware timestamps).
+
+## Go live (Cloud Run)
+
+The service requires GCP for Vertex AI (ADK agents), so Cloud Run is the
+natural target. The runtime service account needs the
+`roles/aiplatform.user` role; no key file is needed on Cloud Run.
+
+```bash
+gcloud builds submit --config deploy/cloudbuild.yaml --region us-central1 \
+  --substitutions=_RUN_SERVICE_ACCOUNT=RUN_SA_EMAIL,_JWT_SECRET=$(openssl rand -hex 32)
+```
+
+See `deploy/cloudbuild.yaml` for the one-time API/repo enablement steps.
+The pipeline deploys, then patches `A2A_ENDPOINT_URL` with the real service
+URL so the Agent Card is accurate.
+
+Notes for production:
+
+- **Database**: default is SQLite inside the container (ephemeral — task
+  history resets on restart). Set `DATABASE_URL` to Cloud SQL Postgres
+  (or any Postgres) for durable state.
+- **Redis**: optional; without `REDIS_URL` the event bus uses in-process
+  queues, which is fine for single-instance deployments.
+- **Auth**: set `AUTH_ENABLED=true` and issue Bearer JWTs signed with
+  `JWT_SECRET` once you want to lock the endpoint down.

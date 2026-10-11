@@ -1,0 +1,40 @@
+# Cloud Build pipeline: build, push, deploy AYSEL to Cloud Run, then patch
+# A2A_ENDPOINT_URL with the service's real URL (the Agent Card advertises it).
+#
+# One-time setup (project owner):
+#   gcloud services enable run.googleapis.com cloudbuild.googleapis.com \
+#       artifactregistry.googleapis.com aiplatform.googleapis.com
+#   gcloud artifacts repositories create aysel \
+#       --repository-format=docker --location=us-central1
+#
+# Deploy:
+#   gcloud builds submit --config deploy/cloudbuild.yaml --region us-central1 \
+#       --substitutions=_RUN_SERVICE_ACCOUNT=vertex-ai@PROJECT_ID.iam.gserviceaccount.com,_JWT_SECRET=$(openssl rand -hex 32)
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "--tag=$_IMAGE", "."]
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "$_IMAGE"]
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        gcloud run deploy aysel \
+          --image=$_IMAGE \
+          --region=$_REGION \
+          --allow-unauthenticated \
+          --service-account=$_RUN_SERVICE_ACCOUNT \
+          --set-env-vars=GOOGLE_CLOUD_PROJECT=${PROJECT_ID},JWT_SECRET=${_JWT_SECRET} \
+          --cpu=1 --memory=1Gi --timeout=600s
+        URL=$(gcloud run services describe aysel --region=$_REGION \
+          --format 'value(status.url)')
+        gcloud run services update aysel --region=$_REGION \
+          --set-env-vars=A2A_ENDPOINT_URL=$$URL
+substitutions:
+  _REGION: us-central1
+  _IMAGE: us-central1-docker.pkg.dev/${PROJECT_ID}/aysel/ayse:${SHORT_SHA}
+  _RUN_SERVICE_ACCOUNT: ""
+  _JWT_SECRET: ""
+options:
+  dynamicSubstitutions: true
