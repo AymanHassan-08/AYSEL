@@ -1,0 +1,44 @@
+[project]
+name = "aysel-a2a-endpoint"
+version = "0.1.0"
+description = "Aysel multi-agent system exposed via the Google A2A protocol"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "gunicorn>=23.0.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+    "sqlalchemy[asyncio]>=2.0.0",
+    "aiosqlite>=0.20.0",
+    "alembic>=1.14.0",
+    "google-adk>=1.0.0",
+    "google-genai>=1.0.0",
+    "google-auth>=2.36.0",
+    "celery>=5.4.0",
+    "redis>=5.2.0",
+    "pyjwt>=2.10.0",
+    "cryptography>=44.0.0",
+    "sse-starlette>=2.1.0",
+]
+
+[project.optional-dependencies]
+prod = ["asyncpg>=0.30.0"]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.28.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = [
+    "api", "agents", "services", "models", "schemas", "db", "celery_worker",
+]
